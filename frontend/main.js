@@ -78,27 +78,7 @@ document.querySelector('#toggle').addEventListener('click', (e) => {
   document.querySelector('#disc').hidden = !suscrito;
 });
 
-// 4. Pestañas
-const pestanas = [...document.querySelectorAll('[role=tab]')];
-pestanas.forEach((tab, i) => {
-  tab.addEventListener('click', () => seleccionar(tab));
-  tab.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') seleccionar(pestanas[(i + 1) % pestanas.length]);
-    if (e.key === 'ArrowLeft') seleccionar(pestanas[(i - 1 + pestanas.length) % pestanas.length]);
-  });
-});
-function seleccionar(tab) {
-  pestanas.forEach((t) => {
-    const activa = t === tab;
-    t.setAttribute('aria-selected', activa);
-    t.tabIndex = activa ? 0 : -1;
-    document.getElementById(t.getAttribute('aria-controls')).hidden = !activa;
-  });
-  if (tab.id === 't-code') VisorCodigo.mostrar();
-  tab.focus();
-}
-
-// 5. Estado inicial: María ya hizo la lectura del módulo 1
+// 4. Estado inicial: María ya hizo la lectura del módulo 1
 Bitacora.registrar('Sistema', 'Inicio: se cargan los datos de prueba (curso, módulos, actividades e inscripción)', true);
 vista.pintar(api.progreso.consultarProgreso(api.codInscripcion));
 registrar('ACT-01', null);

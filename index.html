@@ -13,18 +13,12 @@
   <div class="wrap">
     <div class="brand">Edu<span>Connect</span></div>
     <div class="sub">Prototipo · <b>Progreso y certificado automático (US-211, US-213)</b> · Composite + Observer + Builder</div>
-    <nav role="tablist" aria-label="Secciones del prototipo">
-      <button role="tab" id="t-demo" aria-controls="p-demo" aria-selected="true">Demo</button>
-      <button role="tab" id="t-arq" aria-controls="p-arq" aria-selected="false" tabindex="-1">Diagramas → código</button>
-      <button role="tab" id="t-code" aria-controls="p-code" aria-selected="false" tabindex="-1">Código</button>
-      <button role="tab" id="t-imp" aria-controls="p-imp" aria-selected="false" tabindex="-1">Impacto</button>
-    </nav>
   </div>
 </header>
 
 <main class="wrap">
   <!-- ===================== DEMO ===================== -->
-  <section id="p-demo" role="tabpanel" aria-labelledby="t-demo">
+  <section id="p-demo">
     <p class="lead">Resuelve el problema <b>D3</b> (emisión automática del certificado, <b>US-213</b>), que necesita el cálculo del avance de <b>D2</b> (<b>US-211</b>). Marca actividades y registra notas, o ejecuta un escenario. La bitácora muestra qué patrón actúa en cada paso.</p>
     <div class="scen">
       <button class="btn" id="sc1">Escenario 1: aprueba todo</button>
@@ -61,150 +55,8 @@
     <div class="sr" aria-live="polite" id="live"></div>
   </section>
 
-  <!-- ===================== DIAGRAMAS → CÓDIGO ===================== -->
-  <section id="p-arq" role="tabpanel" aria-labelledby="t-arq" hidden>
-    <p class="lead">El prototipo implementa <b>una sola funcionalidad</b> (F4: seguimiento del progreso y emisión del certificado), pero su código sigue la misma estructura de los diagramas del proyecto. Cada clase está en su propio archivo y cada carpeta corresponde a un contenedor o componente.</p>
-    <div class="arch">
-      <div class="panel">
-        <h2>Diagrama de contenedores (C4 nivel 2) → carpetas</h2>
-        <div class="tbl-wrap"><table class="map">
-          <thead><tr><th>Contenedor del diagrama</th><th>En el código</th><th>Qué hace</th></tr></thead>
-          <tbody>
-            <tr><td>Aplicación Web</td><td><code>frontend/</code></td><td>Dibuja la pantalla y le pide todo al API. Nunca toca las clases del modelo: solo recibe datos simples, como un JSON.</td></tr>
-            <tr><td>API Backend</td><td><code>backend/ApiBackend.js</code></td><td>Crea los componentes y los conecta (aquí se suscriben los observadores).</td></tr>
-            <tr><td>Base de Datos</td><td><code>base-datos/</code></td><td>Simulada en memoria: cada colección (<code>Map</code>) es una tabla del MER.</td></tr>
-            <tr><td>Servicio de Correo / Push (externos)</td><td><code>externos/</code></td><td>Simulados: escriben el mensaje en la bitácora.</td></tr>
-          </tbody>
-        </table></div>
-      </div>
-      <div class="panel">
-        <h2>Diagrama de componentes (C4 nivel 3) → clases</h2>
-        <div class="tbl-wrap"><table class="map">
-          <thead><tr><th>Componente del diagrama</th><th>Clases</th><th>Patrón</th></tr></thead>
-          <tbody>
-            <tr><td>Progreso Controller</td><td><code>backend/progreso/</code>: <code>ProgresoController</code> (entrada del API), <code>SeguimientoProgreso</code>, <code>GestorCertificados</code>, <code>CertificadoBuilder</code></td><td>Composite, Observer, Builder</td></tr>
-            <tr><td>Notificaciones Controller</td><td><code>backend/notificaciones/</code>: <code>NotificadorProgreso</code></td><td>Observer (observador)</td></tr>
-            <tr><td>Sesión, Cuenta, Catálogo, Inscripciones y Cursos Controller</td><td class="na">No se implementan: no hacen parte de la funcionalidad del prototipo.</td><td>—</td></tr>
-          </tbody>
-        </table></div>
-        <p>Las flechas del diagrama se respetan: la Aplicación Web llama al Progreso Controller; este lee y escribe en la Base de Datos y avisa al Notificaciones Controller (Observer), que es el que envía los correos y push.</p>
-      </div>
-      <div class="panel">
-        <h2>Modelo Entidad Relación → clases del modelo (<code>backend/modelo/</code>)</h2>
-        <div class="tbl-wrap"><table class="map">
-          <thead><tr><th>En el MER</th><th>En el código</th></tr></thead>
-          <tbody>
-            <tr><td>Entidad USUARIO y especialización ES-UN (ESTUDIANTE, COORDINADOR)</td><td><code>class Estudiante extends Usuario</code>, <code>class Coordinador extends Usuario</code>: los subtipos heredan los atributos.</td></tr>
-            <tr><td>CURSO, MODULO (débil) y ACTIVIDAD con las relaciones «contiene» e «incluye»</td><td><code>Curso</code>, <code>Modulo</code> y <code>Actividad</code> forman el árbol del <b>Composite</b>. El atributo <code>tipo</code> distingue actividad de evaluación y <code>notaMinima</code> viene de nota_minima.</td></tr>
-            <tr><td>INSCRIPCION y la relación «avanza en» (completada, nota, fecha)</td><td><code>Inscripcion.avances</code>: el curso es el mismo para todos; lo que cambia es el avance de cada inscripción.</td></tr>
-            <tr><td>CERTIFICADO y la relación 1:1 «obtiene»</td><td><code>BaseDeDatos.guardarCertificado()</code> rechaza un segundo certificado para la misma inscripción.</td></tr>
-            <tr><td>PREFERENCIA_NOTIFICACION (débil) y «configura»</td><td><code>Estudiante.preferencias</code>: el notificador usa el canal que eligió el estudiante.</td></tr>
-            <tr><td>NOTIFICACION y «recibe»; COORDINADOR «administra» CURSO</td><td><code>Notificacion</code> se guarda en cada envío; <code>Curso.coordinadores</code>.</td></tr>
-          </tbody>
-        </table></div>
-      </div>
-      <div class="panel">
-        <h2>Diagrama de contexto de la funcionalidad F4 → métodos</h2>
-        <div class="tbl-wrap"><table class="map">
-          <thead><tr><th>Paso</th><th>Flujo del diagrama</th><th>Dónde ocurre</th></tr></thead>
-          <tbody>
-            <tr><td>1</td><td>Estudiante → App: completa una actividad</td><td><code>VistaProgreso</code> (casilla o botón «Registrar»)</td></tr>
-            <tr><td>2</td><td>App → Sistema: registra la actividad completada</td><td><code>ProgresoController.registrarActividad()</code></td></tr>
-            <tr><td>3</td><td>Sistema → BD: guarda el progreso y recalcula el avance</td><td><code>SeguimientoProgreso.registrarAvance()</code> → <code>curso.calcularAvance()</code> (Composite) → <code>BaseDeDatos.guardarInscripcion()</code></td></tr>
-            <tr><td>4</td><td>Sistema → BD: guarda el certificado (100 % y aprobado)</td><td><code>GestorCertificados.actualizar()</code> (Observer) → <code>CertificadoBuilder</code> → <code>BaseDeDatos.guardarCertificado()</code></td></tr>
-            <tr><td>5</td><td>Sistema → Coordinador: envía el certificado</td><td><code>NotificadorProgreso.actualizar()</code> (Observer) → <code>ServicioCorreo.enviar()</code></td></tr>
-            <tr><td>6</td><td>Sistema → App: envía el avance y el certificado</td><td><code>ProgresoController.consultarProgreso()</code> (respuesta)</td></tr>
-            <tr><td>7</td><td>App → Estudiante: muestra el avance y el certificado</td><td><code>VistaProgreso.pintar()</code></td></tr>
-          </tbody>
-        </table></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== CÓDIGO ===================== -->
-  <section id="p-code" role="tabpanel" aria-labelledby="t-code" hidden>
-    <p class="lead">Una clase por archivo, en el orden en que se cargan. Haz clic en un archivo para ver su código. La versión de consola usa el mismo backend: <code>node consola/ejecutar.js</code>.</p>
-    <div class="diagram">
-      <div class="eyebrow" style="margin-bottom:8px">Diagrama de clases</div>
-<pre class="mermaid">
-classDiagram
-  direction LR
-  class ComponenteAcademico {
-    &lt;&lt;abstract&gt;&gt;
-    +calcularAvance(inscripcion)
-    +evaluacionesAprobadas(inscripcion)
-  }
-  ComponenteAcademico <|-- Actividad
-  ComponenteAcademico <|-- Modulo
-  ComponenteAcademico <|-- Curso
-  Curso o-- Modulo : contiene
-  Modulo o-- Actividad : incluye
-  Usuario <|-- Estudiante
-  Usuario <|-- Coordinador
-  Inscripcion --> Estudiante
-  Inscripcion --> Curso
-  class ObservadorProgreso {
-    &lt;&lt;interface&gt;&gt;
-    +actualizar(datos)
-  }
-  class SeguimientoProgreso {
-    +suscribir(o)
-    +desuscribir(o)
-    +notificar(datos)
-    +registrarAvance(insc, act, nota)
-  }
-  ObservadorProgreso <|-- GestorCertificados
-  ObservadorProgreso <|-- NotificadorProgreso
-  SeguimientoProgreso o-- ObservadorProgreso : avisa a
-  GestorCertificados ..> CertificadoBuilder
-  CertificadoBuilder ..> Certificado : crea
-  ProgresoController --> SeguimientoProgreso
-  ProgresoController --> BaseDeDatos
-  GestorCertificados --> BaseDeDatos
-  NotificadorProgreso --> ServicioCorreo
-  NotificadorProgreso --> ServicioPush
-</pre>
-    </div>
-    <div id="code-out"></div>
-  </section>
-
-  <!-- ===================== IMPACTO ===================== -->
-  <section id="p-imp" role="tabpanel" aria-labelledby="t-imp" hidden>
-    <p class="lead">Cómo mejora cada patrón el diseño de EduConnect y dónde se ve en la demo.</p>
-    <div class="impact">
-      <article class="card">
-        <span class="tag Composite kindtag">Composite · Estructural</span>
-        <h3>El curso se calcula igual que una actividad</h3>
-        <dl>
-          <dt>Mejora</dt><dd><b>Escalabilidad.</b> Se pueden agregar más niveles, como submódulos o talleres, sin cambiar el cálculo del avance (US-211).</dd>
-          <dt>En la demo</dt><dd>Cada módulo muestra su porcentaje y el curso los combina. Todos usan <code>calcularAvance(inscripcion)</code>.</dd>
-        </dl>
-      </article>
-      <article class="card">
-        <span class="tag Observer kindtag">Observer · Conductual</span>
-        <h3>El progreso avisa sin conocer a quién</h3>
-        <dl>
-          <dt>Mejora</dt><dd><b>Escalabilidad y bajo acoplamiento.</b> El seguimiento no conoce al gestor de certificados ni al notificador; se pueden agregar observadores nuevos sin tocarlo (US-211, US-213).</dd>
-          <dt>En la demo</dt><dd>«Desuscribir notificaciones» saca al notificador de la lista: dejan de salir correos, pero el certificado se sigue emitiendo.</dd>
-        </dl>
-      </article>
-      <article class="card">
-        <span class="tag Builder kindtag">Builder · Creacional</span>
-        <h3>Ningún certificado sale incompleto</h3>
-        <dl>
-          <dt>Mejora</dt><dd><b>Calidad de los datos.</b> Si falta el código, la inscripción o la fecha, no se genera (US-213).</dd>
-          <dt>En la demo</dt><dd>El Escenario 3 intenta construir un certificado sin inscripción y el Builder lo rechaza.</dd>
-        </dl>
-      </article>
-    </div>
-  </section>
 </main>
 
-<!-- Mermaid dibuja el diagrama de clases (necesita internet) -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
-
-<!-- Una clase por archivo. El orden importa: cada clase padre se carga antes que sus hijas. -->
-<script src="compartido/archivos.js"></script>
 <script src="compartido/Bitacora.js"></script>
 <!-- API Backend · modelo (entidades del MER) -->
 <script src="backend/modelo/Usuario.js"></script>
@@ -236,17 +88,7 @@ classDiagram
 <script src="backend/ApiBackend.js"></script>
 <!-- Contenedor Aplicación Web -->
 <script src="frontend/VistaProgreso.js"></script>
-<script src="frontend/VisorCodigo.js"></script>
 <script src="frontend/main.js"></script>
-<script>
-  // Diagrama de clases: se dibuja la primera vez que se abre la pestaña Código
-  document.getElementById('t-code').addEventListener('click', () => {
-    if (window.mermaid && !window.diagramaListo) {
-      window.diagramaListo = true;
-      mermaid.initialize({ startOnLoad: false, theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default' });
-      mermaid.run({ querySelector: '.mermaid' });
-    }
-  });
-</script>
+
 </body>
 </html>
